@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="10dp"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <de.hdodenhof.circleimageview.CircleImageView
+        android:id="@+id/user_image_view"
+        android:layout_width="45dp"
+        android:layout_height="45dp"
+        android:src="@mipmap/ic_launcher_round" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:layout_toEndOf="@id/user_image_view"
+        android:layout_centerVertical="true">
+
+        <TextView
+            android:id="@+id/name_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:textSize="16sp"
+            android:maxEms="20"
+            android:textStyle="bold"
+            android:textColor="@color/colorLighterDark"
+            android:maxLines="1"
+            tools:text="Zakaria Hossain" />
+
+        <RelativeLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp">
+
+            <TextView
+                android:id="@+id/last_message_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/colorLighterDark"
+                android:alpha="0.8"
+                android:maxEms="15"
+                android:maxLines="1"
+                tools:text="Hey hello, how are you today? " />
+
+            <TextView
+                android:id="@+id/last_seen_time_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textSize="12sp"
+                android:textColor="@color/colorLighterDark"
+                android:alpha="0.8"
+                android:layout_toEndOf="@id/last_message_text_view"
+                tools:text=" \u2022 03:22 PM" />
+
+        </RelativeLayout>
+    </LinearLayout>
+
+</RelativeLayout>
