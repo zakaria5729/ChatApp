@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.bumptech.glide.Glide;
 import com.chat.app.R;
+import com.chat.app.interfaces.MyOnClickListener;
 import com.chat.app.models.ChatMessage;
 import com.parse.ParseUser;
 
@@ -24,6 +25,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
 
     private Context context;
     private List<ChatMessage> chatMessageList;
+    private MyOnClickListener myOnClickListener;
 
     public ChatAdapter(Context context, List<ChatMessage> chatMessageList) {
         this.context = context;
@@ -45,7 +47,8 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         if (this.fromId.equals(fromId)) {
             ChatMessage sender = chatMessageList.get(position);
             holder.fromRelativeLayout.setVisibility(View.VISIBLE);
-            holder.fromMessageTextView.setText(sender.getMessage());
+            holder.fromMessageTextView.setText(sender.getText());
+            holder.fromTime.setText(sender.getCreatedAt());
 
             Glide.with(context)
                     .load(defaultAvatar)
@@ -53,11 +56,11 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
                     .placeholder(R.drawable.custom_rounder_gray)
                     .error(R.drawable.custom_rounder_gray)
                     .into(holder.fromImageView);
-
         } else {
             ChatMessage receiver = chatMessageList.get(position);
             holder.toRelativeLayout.setVisibility(View.VISIBLE);
-            holder.toMessageTextView.setText(receiver.getMessage());
+            holder.toMessageTextView.setText(receiver.getText());
+            holder.toTime.setText(receiver.getCreatedAt());
 
             Glide.with(context)
                     .load(defaultAvatar)
@@ -73,20 +76,36 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         return chatMessageList.size() > 0 ? chatMessageList.size() : 0;
     }
 
+    public void setMyOnClickListener(MyOnClickListener myOnClickListener) {
+        this.myOnClickListener = myOnClickListener;
+    }
+
     class ChatViewHolder extends RecyclerView.ViewHolder {
         private RelativeLayout fromRelativeLayout, toRelativeLayout;
         private ImageView fromImageView, toImageView;
-        private TextView fromMessageTextView, toMessageTextView;
+        private TextView fromMessageTextView, toMessageTextView, toTime, fromTime;
 
         ChatViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            fromImageView = itemView.findViewById(R.id.from_image_view);
             toImageView = itemView.findViewById(R.id.to_image_view);
+            toTime = itemView.findViewById(R.id.to_time_text_view);
+            fromTime = itemView.findViewById(R.id.from_time_text_view);
+            fromImageView = itemView.findViewById(R.id.from_image_view);
             fromMessageTextView = itemView.findViewById(R.id.from_message_text_view);
             toMessageTextView = itemView.findViewById(R.id.to_message_text_view);
             fromRelativeLayout = itemView.findViewById(R.id.from_relative_layout);
             toRelativeLayout = itemView.findViewById(R.id.to_relative_layout);
+
+            toRelativeLayout.setOnLongClickListener(v -> {
+                myOnClickListener.myOnClick(chatMessageList.get(getAdapterPosition()).getObjectId());
+                return true;
+            });
+
+            fromRelativeLayout.setOnLongClickListener(v -> {
+                myOnClickListener.myOnClick(chatMessageList.get(getAdapterPosition()).getObjectId());
+                return true;
+            });
         }
     }
 }

@@ -40,10 +40,13 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
         User user = userList.get(position);
-        String lastSeen = " \u2022 " + user.getLastSeen();
-        holder.lastSeenTimeTextView.setText(lastSeen);
         holder.nameTextView.setText(user.getName());
-        holder.lastMessageTextView.setText(user.getLastMessage());
+
+        if (user.getLastMessage() != null) {
+            String lastSeen = " \u2022 " + user.getLastSeen();
+            holder.lastSeenTimeTextView.setText(lastSeen);
+            holder.lastMessageTextView.setText(user.getLastMessage());
+        }
 
         Glide.with(context)
                 .load(defaultAvatar)

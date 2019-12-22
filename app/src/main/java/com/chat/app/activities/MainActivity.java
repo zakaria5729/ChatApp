@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -17,35 +20,44 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.chat.app.R;
 import com.chat.app.activities.auth.LoginActivity;
 import com.chat.app.adapters.UserAdapter;
-import com.chat.app.viewmodels.ChatViewModel;
 import com.chat.app.viewmodels.UserViewModel;
 import com.parse.ParseUser;
 
 public class MainActivity extends BaseActivity {
-
-    private ChatViewModel chatViewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        RecyclerView userRecyclerView = findViewById(R.id.user_recycler_view);
+        ProgressBar progressBar = findViewById(R.id.progressbar);
+        TextView noUserFound = findViewById(R.id.no_user_text_view);
         SearchView userSearchView = findViewById(R.id.user_search_view);
+        RecyclerView userRecyclerView = findViewById(R.id.user_recycler_view);
         userRecyclerView.setHasFixedSize(true);
         userRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
         UserViewModel userViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
-        chatViewModel = ViewModelProviders.of(this).get(ChatViewModel.class);
         userViewModel.allUsers();
 
         userViewModel.getAllUsersResponse().observe(this, users -> {
-            UserAdapter userAdapter = new UserAdapter(this, users);
-            userRecyclerView.setAdapter(userAdapter);
+            progressBar.setVisibility(View.GONE);
+
+            if (users.size() > 0) {
+                noUserFound.setVisibility(View.GONE);
+                UserAdapter userAdapter = new UserAdapter(this, users);
+                userRecyclerView.setAdapter(userAdapter);
+            } else {
+                String noUser = "No users found";
+                noUserFound.setText(noUser);
+                noUserFound.setVisibility(View.VISIBLE);
+            }
         });
 
-        userViewModel.getErrorResponse().observe(this, errorResponse ->
-                Toast.makeText(this, errorResponse, Toast.LENGTH_SHORT).show());
+        userViewModel.getErrorResponse().observe(this, errorResponse -> {
+            progressBar.setVisibility(View.GONE);
+            Toast.makeText(this, errorResponse, Toast.LENGTH_SHORT).show();
+        });
 
         userSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override

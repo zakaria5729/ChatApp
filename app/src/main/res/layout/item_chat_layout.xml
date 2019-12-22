@@ -10,12 +10,14 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        tools:visibility="visible">
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        tools:visibility="gone">
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/from_image_view"
-            android:layout_width="40dp"
-            android:layout_height="40dp"
+            android:layout_width="50dp"
+            android:layout_height="50dp"
             android:layout_alignParentStart="true"
             android:layout_centerVertical="true"
             android:src="@mipmap/ic_launcher_round" />
@@ -25,8 +27,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_toEndOf="@+id/from_image_view"
-            android:layout_marginStart="8dp"
             android:maxWidth="290dp"
+            android:layout_marginStart="8dp"
             android:padding="8dp"
             android:textSize="16sp"
             android:textIsSelectable="true"
@@ -34,6 +36,20 @@
             android:textColor="@color/colorLighterDark"
             android:background="@drawable/custom_rounder_gray"
             tools:text="Hello, how are you?" />
+
+        <TextView
+            android:id="@+id/from_time_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:layout_marginStart="8dp"
+            android:paddingTop="14dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="8dp"
+            android:layout_below="@+id/from_message_text_view"
+            android:layout_toEndOf="@id/from_image_view"
+            tools:text="jkfdkjfkjfld" />
+
     </RelativeLayout>
 
     <RelativeLayout
@@ -41,7 +57,9 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        tools:visibility="gone">
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        tools:visibility="visible">
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/to_image_view"
@@ -64,6 +82,19 @@
             android:textColor="@android:color/white"
             android:background="@drawable/custom_rounder_blue"
             tools:text="Hello, how are you?" />
+
+        <TextView
+            android:id="@+id/to_time_text_view"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textSize="12sp"
+            android:layout_marginStart="8dp"
+            android:paddingTop="14dp"
+            android:paddingStart="8dp"
+            android:paddingEnd="12dp"
+            android:layout_below="@+id/to_message_text_view"
+            android:layout_toStartOf="@+id/to_image_view"
+            tools:text="jkfdkjfkjfld" />
 
     </RelativeLayout>
 </RelativeLayout>

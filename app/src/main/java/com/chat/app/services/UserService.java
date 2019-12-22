@@ -6,9 +6,6 @@ import com.parse.ParseObject;
 import com.parse.ParseQuery;
 import com.parse.ParseUser;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class UserService {
 
     public void getUser(String searchedKey, OnUserResponse response) {
@@ -27,8 +24,8 @@ public class UserService {
     }
 
     public void lastMessage(OnObjectResponse response) {
-        ParseQuery<ParseObject> query = ParseQuery.getQuery("ChattingData");
-        query.findInBackground((objects, e) -> {
+        ParseQuery<ParseObject> query1 = ParseQuery.getQuery("LatestMessage");
+        query1.findInBackground((objects, e) -> {
             if (e == null) {
                 response.onObject(objects, null);
             } else {

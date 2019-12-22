@@ -1,12 +1,18 @@
 package com.chat.app.models;
 
 public class ChatMessage {
-    private String fromId, toId, message;
+    private String objectId, fromId, toId, text, createdAt;
 
-    public ChatMessage(String fromId, String toId, String message) {
+    public ChatMessage(String objectId, String fromId, String toId, String text, String createdAt) {
+        this.objectId = objectId;
         this.toId = toId;
         this.fromId = fromId;
-        this.message = message;
+        this.text = text;
+        this.createdAt = createdAt;
+    }
+
+    public String getObjectId() {
+        return objectId;
     }
 
     public String getToId() {
@@ -17,7 +23,11 @@ public class ChatMessage {
         return fromId;
     }
 
-    public String getMessage() {
-        return message;
+    public String getText() {
+        return text;
+    }
+
+    public String getCreatedAt() {
+        return createdAt;
     }
 }

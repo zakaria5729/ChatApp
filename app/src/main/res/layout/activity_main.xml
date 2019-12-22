@@ -35,4 +35,22 @@
         tools:itemCount="15"
         tools:listitem="@layout/item_users_layout" />
 
+    <ProgressBar
+        android:id="@+id/progressbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        tools:visibility="visible" />
+
+    <TextView
+        android:id="@+id/no_user_text_view"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerInParent="true"
+        android:visibility="gone"
+        android:layout_margin="16dp"
+        android:textSize="18sp"
+        tools:text="No users found"
+        tools:visibility="visible" />
+
 </RelativeLayout>
