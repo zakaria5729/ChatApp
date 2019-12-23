@@ -32,14 +32,15 @@ public class UserViewModel extends ViewModel {
 
                 userService.lastMessage((objects, error1) -> {
                     if (objects != null) {
-                        String time = null, text = null;
+                        String time = null, text = null, fileName = null;
 
                         for (ParseUser user : users) {
                             for (ParseObject object : objects) {
                                 String lastMessageId = object.getString("lastMessageId");
-                                if (lastMessageId != null && (lastMessageId.equals(currentUserId + user.getObjectId()) || lastMessageId.equals(user.getObjectId() + currentUserId))) {
+                                if (lastMessageId != null && !currentUserId.equals(user.getObjectId()) && (lastMessageId.equals(currentUserId + user.getObjectId()) || lastMessageId.equals(user.getObjectId() + currentUserId))) {
                                     time = object.getUpdatedAt().toString();
                                     text = object.getString("text");
+                                    fileName = object.getString("fileName");
                                     break;
                                 } else {
                                     time = null;
@@ -47,7 +48,9 @@ public class UserViewModel extends ViewModel {
                                 }
                             }
 
-                            userList.add(new User(user.getObjectId(), user.getUsername(), user.getEmail(), text, getDateTime(time)));
+                            if (!currentUserId.equals(user.getObjectId())) {
+                                userList.add(new User(user.getObjectId(), user.getUsername(), user.getEmail(), text, fileName, getDateTime(time)));
+                            }
                         }
                         usersResponse.setValue(userList);
 
@@ -106,7 +109,7 @@ public class UserViewModel extends ViewModel {
 
                 for (ParseUser user : users) {
                     if (!user.getObjectId().equals(ParseUser.getCurrentUser().getObjectId())) {
-                        userList.add(new User(user.getObjectId(), user.getUsername(), user.getEmail(), "Hello, how are you?", "3:35AM"));
+                        userList.add(new User(user.getObjectId(), user.getUsername(), user.getEmail(), "Hello, how are you?", "", "3:35AM"));
                     }
                 }
                 usersResponse.setValue(userList);

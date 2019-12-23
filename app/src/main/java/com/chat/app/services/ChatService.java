@@ -1,7 +1,10 @@
 package com.chat.app.services;
 
+import android.text.TextUtils;
+
 import com.chat.app.interfaces.OnObjectResponse;
 import com.chat.app.interfaces.OnResponse;
+import com.parse.ParseFile;
 import com.parse.ParseObject;
 import com.parse.ParseQuery;
 
@@ -10,12 +13,15 @@ import java.util.List;
 
 public class ChatService {
 
-    public void createMessage(String text, String fromId, String toId, String threadId, OnResponse response) {
+    public void createMessage(String text, ParseFile parseFile, String fromId, String toId, String threadId, OnResponse response) {
         ParseObject parseObject = new ParseObject("Message");
-        parseObject.put("text", text);
         parseObject.put("fromId", fromId);
         parseObject.put("toId", toId);
         parseObject.put("threadId", threadId);
+        parseObject.put("text", text);
+        if (parseFile != null) {
+            parseObject.put("file", parseFile);
+        }
         parseObject.saveInBackground(e -> {
             if (e != null) {
                 response.onComplete(null, e.getMessage());
@@ -25,7 +31,7 @@ public class ChatService {
         });
     }
 
-    public void createOrUpdateLatestMessage(String objectId, String text, String fromId, String toId, OnResponse response) {
+    public void createOrUpdateLatestMessage(String objectId, String text, String fileName, String fromId, String toId, OnResponse response) {
         if (objectId != null) {
             ParseQuery<ParseObject> query = ParseQuery.getQuery("LatestMessage");
             query.getInBackground(objectId, (object, e) -> {
@@ -33,7 +39,20 @@ public class ChatService {
                     object.put("lastMessageId", fromId + toId);
                     object.put("fromId", fromId);
                     object.put("toId", toId);
-                    object.put("text", text);
+
+                    if (!TextUtils.isEmpty(text.trim()) && !TextUtils.isEmpty(fileName)) {
+                        object.put("text", text);
+                        object.put("fileName", fileName);
+                    } else {
+                        if (!TextUtils.isEmpty(text.trim())) {
+                            object.put("text", text);
+                            object.put("fileName", "");
+                        } else if (!TextUtils.isEmpty(fileName)) {
+                            object.put("text", "");
+                            object.put("fileName", fileName);
+                        }
+                    }
+
                     object.saveInBackground(error -> {
                         if (error != null) {
                             response.onComplete(null, error.getMessage());
@@ -48,12 +67,23 @@ public class ChatService {
             parseObject.put("lastMessageId", fromId + toId);
             parseObject.put("fromId", fromId);
             parseObject.put("toId", toId);
-            parseObject.put("text", text);
+
+            if (!TextUtils.isEmpty(text.trim()) && !TextUtils.isEmpty(fileName)) {
+                parseObject.put("text", text);
+                parseObject.put("fileName", fileName);
+            } else {
+                if (!TextUtils.isEmpty(text.trim())) {
+                    parseObject.put("text", text);
+                } else if (!TextUtils.isEmpty(fileName)) {
+                    parseObject.put("fileName", fileName);
+                }
+            }
+
             parseObject.saveInBackground(e -> {
                 if (e != null) {
                     response.onComplete(null, e.getMessage());
                 } else {
-                    response.onComplete("created", null);
+                    response.onComplete("created latest", null);
                 }
             });
         }
@@ -71,8 +101,8 @@ public class ChatService {
         parseQueries.add(query2);
 
         ParseQuery<ParseObject> combineQuery = ParseQuery.or(parseQueries);
-        //combineQuery.setSkip(skipLimit);
-        //combineQuery.orderByDescending("createdAt").setLimit(limit);
+        combineQuery.setSkip(skipLimit);
+        combineQuery.orderByDescending("createdAt").setLimit(limit);
         combineQuery.findInBackground((objects, e) -> {
             if (e == null) {
                 response.onObject(objects, null);

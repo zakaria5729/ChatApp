@@ -2,11 +2,12 @@ package com.chat.app.adapters;
 
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
+import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -39,13 +40,19 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
+        holder.lastMessageLinearLayout.setVisibility(View.GONE);
         User user = userList.get(position);
         holder.nameTextView.setText(user.getName());
+        String lastSeen = " \u2022 " + user.getLastSeen();
 
-        if (user.getLastMessage() != null) {
-            String lastSeen = " \u2022 " + user.getLastSeen();
+        if (user.getLastMessage() != null && !TextUtils.isEmpty(user.getLastMessage().trim())) {
+            holder.lastMessageLinearLayout.setVisibility(View.VISIBLE);
+            holder.lastMessageOrFileTextView.setText(user.getLastMessage());
             holder.lastSeenTimeTextView.setText(lastSeen);
-            holder.lastMessageTextView.setText(user.getLastMessage());
+        } else if (user.getFileName() != null && !TextUtils.isEmpty(user.getFileName().trim())) {
+            holder.lastMessageLinearLayout.setVisibility(View.VISIBLE);
+            holder.lastMessageOrFileTextView.setText(user.getFileName());
+            holder.lastSeenTimeTextView.setText(lastSeen);
         }
 
         Glide.with(context)
@@ -63,20 +70,22 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
 
     class UserViewHolder extends RecyclerView.ViewHolder {
         private ImageView userImageView;
-        private TextView nameTextView, lastMessageTextView, lastSeenTimeTextView;
+        private LinearLayout lastMessageLinearLayout;
+        private TextView nameTextView, lastMessageOrFileTextView, lastSeenTimeTextView;
 
         UserViewHolder(@NonNull View itemView) {
             super(itemView);
 
-            userImageView = itemView.findViewById(R.id.user_image_view);
+            lastMessageLinearLayout = itemView.findViewById(R.id.last_message_linear_layout);
             nameTextView = itemView.findViewById(R.id.name_text_view);
-            lastMessageTextView = itemView.findViewById(R.id.last_message_text_view);
+            userImageView = itemView.findViewById(R.id.user_image_view);
+            lastMessageOrFileTextView = itemView.findViewById(R.id.last_message_or_file_text_view);
             lastSeenTimeTextView = itemView.findViewById(R.id.last_seen_time_text_view);
 
             itemView.setOnClickListener(v -> {
                 Intent intent = new Intent(context, ChatActivity.class);
-                intent.putExtra("from user id", ParseUser.getCurrentUser().getObjectId());
-                intent.putExtra("to user id", userList.get(getAdapterPosition()).getId());
+                intent.putExtra("from_user_id", ParseUser.getCurrentUser().getObjectId());
+                intent.putExtra("to_user_id", userList.get(getAdapterPosition()).getId());
                 context.startActivity(intent);
             });
         }

@@ -9,9 +9,9 @@
         android:id="@+id/swipe_refresh_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_above="@+id/message_send_relative_layout"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_above="@+id/message_send_linear_layout">
+        android:layout_centerHorizontal="true">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/chat_recycler_view"
@@ -21,59 +21,120 @@
             tools:listitem="@layout/item_chat_layout" />
     </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
+    <ProgressBar
+        android:id="@+id/send_progressbar"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        style="?android:attr/progressBarStyleSmall"
+        android:layout_centerHorizontal="true"
+        android:visibility="gone"
+        android:layout_above="@id/message_send_relative_layout"
+        tools:visibility="visible" />
+
     <RelativeLayout
-        android:id="@+id/message_send_linear_layout"
+        android:id="@+id/message_send_relative_layout"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:layout_marginStart="8dp"
-        android:layout_marginBottom="8dp"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
-        android:layout_alignParentEnd="true">
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentBottom="true"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp">
 
         <View
             android:id="@+id/divider"
             android:layout_width="match_parent"
             android:layout_height="1dp"
-            android:layout_marginStart="6dp"
-            android:layout_marginEnd="12dp"
-            android:background="@color/colorLighterGray"
-            android:layout_alignParentTop="true"
             android:layout_alignParentStart="true"
-            android:layout_alignParentEnd="true" />
+            android:layout_alignParentTop="true"
+            android:layout_alignParentEnd="true"
+            android:layout_marginStart="3dp"
+            android:layout_marginEnd="12dp"
+            android:background="@color/colorLighterGray" />
+
+        <FrameLayout
+            android:id="@+id/frame_layout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignTop="@id/divider"
+            android:visibility="gone"
+            android:layout_alignParentStart="true"
+            tools:visibility="visible">
+
+            <ImageView
+                android:id="@+id/selected_preview_image_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="5dp"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="4dp"
+                android:adjustViewBounds="true"
+                android:maxWidth="45dp"
+                android:maxHeight="45dp"
+                android:src="@drawable/ic_launcher_background"
+                android:contentDescription="@null"
+                android:visibility="visible"
+                tools:visibility="visible" />
+
+            <ImageView
+                android:id="@+id/cancel_preview_image_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|end"
+                android:layout_marginTop="4dp"
+                android:src="@drawable/ic_cancel"
+                android:contentDescription="@null" />
+        </FrameLayout>
 
         <LinearLayout
+            android:id="@+id/message_linear_layout"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:layout_below="@id/divider"
+            android:layout_below="@id/frame_layout"
             android:layout_alignParentStart="true"
-            android:layout_alignParentEnd="true">
+            android:layout_alignParentEnd="true"
+            android:orientation="horizontal">
+
+            <ImageButton
+                android:id="@+id/camera_image_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_vertical"
+                android:background="@android:color/transparent"
+                android:contentDescription="@null"
+                android:paddingTop="8dp"
+                android:src="@drawable/ic_camera" />
 
             <EditText
                 android:id="@+id/message_edit_text"
                 android:layout_width="0dp"
                 android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:paddingTop="8dp"
-                android:paddingBottom="8dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
                 android:layout_marginStart="4dp"
-                android:textSize="16sp"
+                android:layout_marginTop="4dp"
+                android:layout_weight="1"
+                android:background="@drawable/custom_rounder_gray"
+                android:drawablePadding="8dp"
                 android:gravity="center_vertical"
                 android:hint="@string/type_a_message"
-                android:layout_marginTop="4dp"
-                android:background="@drawable/custom_rounder_gray" />
+                android:inputType="text"
+                android:paddingStart="12dp"
+                android:paddingTop="8dp"
+                android:paddingEnd="12dp"
+                android:paddingBottom="8dp"
+                android:textSize="16sp" />
 
             <ImageButton
                 android:id="@+id/send_image_button"
-                android:layout_width="42dp"
-                android:layout_height="42dp"
-                android:src="@drawable/ic_send"
-                android:background="@null" />
-
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:background="@null"
+                android:contentDescription="@null"
+                android:paddingStart="5dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="8dp"
+                android:src="@drawable/ic_send" />
         </LinearLayout>
     </RelativeLayout>
 
@@ -84,15 +145,15 @@
         android:layout_centerInParent="true"
         tools:visibility="visible" />
 
-    <TextView
+   <!-- <TextView
         android:id="@+id/no_message_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
         android:layout_margin="16dp"
-        android:visibility="gone"
         android:textSize="18sp"
+        android:visibility="gone"
         tools:text="No message found"
-        tools:visibility="visible" />
+        tools:visibility="visible" />-->
 
 </RelativeLayout>

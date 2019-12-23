@@ -6,8 +6,10 @@ import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
+import com.chat.app.adapters.ChatAdapter;
 import com.chat.app.models.ChatMessage;
 import com.chat.app.services.ChatService;
+import com.parse.ParseFile;
 import com.parse.ParseObject;
 
 import java.text.SimpleDateFormat;
@@ -22,12 +24,15 @@ public class ChatViewModel extends ViewModel {
     private ChatService chatService = new ChatService();
     private MutableLiveData<String> errorResponse = new MutableLiveData<>();
     private MutableLiveData<String> createdResponse = new MutableLiveData<>();
-    private MutableLiveData<List<ChatMessage>> chatMessageResponse = new MutableLiveData<>();
+    private MutableLiveData<List<ChatMessage>> readMessageResponse = new MutableLiveData<>();
     private MutableLiveData<String> checkLatestMessage = new MutableLiveData<>();
-    private List<ChatMessage> chatMessageList = new ArrayList<>();
 
-    public void createMessage(String text, String fromId, String toId, String threadId) {
-        chatService.createMessage(text, fromId, toId, threadId, (success, error) -> {
+    public void createMessage(String text, ParseFile parseFile, String fromId, String toId, String threadId) {
+        if (TextUtils.isEmpty(fromId) || TextUtils.isEmpty(toId) || TextUtils.isEmpty(threadId)) {
+            return;
+        }
+
+        chatService.createMessage(text, parseFile, fromId, toId, threadId, (success, error) -> {
             if (success != null) {
                 createdResponse.setValue(success);
             } else if (error != null) {
@@ -51,8 +56,8 @@ public class ChatViewModel extends ViewModel {
         });
     }
 
-    public void createOrUpdateLatestMessage(String objectId, String message, String fromId, String toId) {
-        chatService.createOrUpdateLatestMessage(objectId, message, fromId, toId, (success, error) -> {
+    public void createOrUpdateLatestMessage(String objectId, String text, String fileName, String fromId, String toId) {
+        chatService.createOrUpdateLatestMessage(objectId, text, fileName, fromId, toId, (success, error) -> {
             if (success != null) {
                 createdResponse.setValue(success);
             } else if (error != null) {
@@ -62,8 +67,10 @@ public class ChatViewModel extends ViewModel {
     }
 
     public void readMessages(String fromId, String toId, int limit, int skipLimit) {
+
         chatService.readMessages(fromId, toId, limit, skipLimit, (objects, error) -> {
             if (objects != null) {
+                List<ChatMessage> chatMessageList = new ArrayList<>();
 
                 for (ParseObject object : objects) {
                     String objectId = object.getObjectId();
@@ -72,12 +79,18 @@ public class ChatViewModel extends ViewModel {
                     String text = object.getString("text");
                     String createdAt = getDateTime(object.getCreatedAt().toString());
 
-                    if (!TextUtils.isEmpty(fromUserId) && !TextUtils.isEmpty(toUserId) && !TextUtils.isEmpty(text)) {
-                        ChatMessage chatMessage = new ChatMessage(objectId, fromUserId, toUserId, text, createdAt);
+                    String imageUrl = null;
+                    ParseFile parseFile = object.getParseFile("file");
+                    if (parseFile != null && parseFile.getUrl() != null) {
+                        imageUrl = parseFile.getUrl();
+                    }
+
+                    if (!TextUtils.isEmpty(fromUserId) && !TextUtils.isEmpty(toUserId) && (!TextUtils.isEmpty(text) || imageUrl != null)) {
+                        ChatMessage chatMessage = new ChatMessage(objectId, fromUserId, toUserId, text, imageUrl, createdAt);
                         chatMessageList.add(chatMessage);
                     }
                 }
-                chatMessageResponse.setValue(chatMessageList);
+                readMessageResponse.setValue(chatMessageList);
             } else if (error != null) {
                 errorResponse.setValue(error);
             }
@@ -122,8 +135,8 @@ public class ChatViewModel extends ViewModel {
         return createdResponse;
     }
 
-    public LiveData<List<ChatMessage>> getChatMessageResponse() {
-        return chatMessageResponse;
+    public LiveData<List<ChatMessage>> getReadMessageResponse() {
+        return readMessageResponse;
     }
 
     public LiveData<String> getCheckLatestMessage() {
