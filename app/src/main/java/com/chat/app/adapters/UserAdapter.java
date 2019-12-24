@@ -2,6 +2,7 @@ package com.chat.app.adapters;
 
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Typeface;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -27,6 +28,8 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
     private Context context;
     private List<User> userList;
 
+    public UserAdapter() {}
+
     public UserAdapter(Context context, List<User> userList) {
         this.context = context;
         this.userList = userList;
@@ -40,32 +43,33 @@ public class UserAdapter extends RecyclerView.Adapter<UserAdapter.UserViewHolder
 
     @Override
     public void onBindViewHolder(@NonNull UserViewHolder holder, int position) {
-        holder.lastMessageLinearLayout.setVisibility(View.GONE);
         User user = userList.get(position);
-        holder.nameTextView.setText(user.getName());
-        String lastSeen = " \u2022 " + user.getLastSeen();
 
-        if (user.getLastMessage() != null && !TextUtils.isEmpty(user.getLastMessage().trim())) {
-            holder.lastMessageLinearLayout.setVisibility(View.VISIBLE);
-            holder.lastMessageOrFileTextView.setText(user.getLastMessage());
-            holder.lastSeenTimeTextView.setText(lastSeen);
-        } else if (user.getFileName() != null && !TextUtils.isEmpty(user.getFileName().trim())) {
-            holder.lastMessageLinearLayout.setVisibility(View.VISIBLE);
-            holder.lastMessageOrFileTextView.setText(user.getFileName());
-            holder.lastSeenTimeTextView.setText(lastSeen);
+        if (user != null) {
+            holder.lastMessageLinearLayout.setVisibility(View.GONE);
+            holder.nameTextView.setText(user.getName());
+            String lastSeen = " \u2022 " + user.getLastSeen();
+
+            if (user.getLastMessage() != null && !TextUtils.isEmpty(user.getLastMessage().trim())) {
+                holder.lastMessageLinearLayout.setVisibility(View.VISIBLE);
+                holder.lastMessageOrFileTextView.setText(user.getLastMessage());
+                holder.lastSeenTimeTextView.setText(lastSeen);
+            } else if (user.getFileFromWho() != null && !TextUtils.isEmpty(user.getFileFromWho().trim())) {
+                holder.lastMessageLinearLayout.setVisibility(View.VISIBLE);
+                holder.lastMessageOrFileTextView.setText(user.getFileFromWho());
+                holder.lastSeenTimeTextView.setText(lastSeen);
+            }
+
+            Glide.with(context)
+                    .load(defaultAvatar)
+                    .fitCenter()
+                    .into(holder.userImageView);
         }
-
-        Glide.with(context)
-                .load(defaultAvatar)
-                .fitCenter()
-                .placeholder(R.drawable.custom_rounder_gray)
-                .error(R.drawable.custom_rounder_gray)
-                .into(holder.userImageView);
     }
 
     @Override
     public int getItemCount() {
-        return userList.size() > 0 ? userList.size() : 0;
+        return (userList != null && userList.size() > 0) ? userList.size() : 0;
     }
 
     class UserViewHolder extends RecyclerView.ViewHolder {

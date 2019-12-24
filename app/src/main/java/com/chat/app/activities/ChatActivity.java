@@ -1,19 +1,15 @@
 package com.chat.app.activities;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -27,16 +23,14 @@ import com.chat.app.R;
 import com.chat.app.adapters.ChatAdapter;
 import com.chat.app.models.ChatMessage;
 import com.chat.app.viewmodels.ChatViewModel;
-import com.parse.ParseFile;
+import com.parse.ParseUser;
 import com.theartofdev.edmodo.cropper.CropImage;
 import com.theartofdev.edmodo.cropper.CropImageView;
 
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class ChatActivity extends BaseActivity implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
 
@@ -45,14 +39,14 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
     private ChatAdapter chatAdapter;
 
     private FrameLayout frameLayout;
-    private RecyclerView chatRecyclerView;
+    private RecyclerView recyclerView;
     private EditText messageEditText;
-    private String fromId, toId, textMessage, fileName;
+    private String fromId, toId, textMessage;
     private int skipLimit = 0, limit = 10;
     private List<ChatMessage> chatMessageList;
-    private ParseFile parseFile;
     private ImageView selectedPreviewImageView;
     private ProgressBar sendProgressBar;
+    private InputStream inputStream;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,11 +57,10 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
         messageEditText = findViewById(R.id.message_edit_text);
         sendProgressBar = findViewById(R.id.send_progressbar);
         ProgressBar progressBar = findViewById(R.id.progressbar);
-        chatRecyclerView = findViewById(R.id.chat_recycler_view);
+        recyclerView = findViewById(R.id.chat_recycler_view);
         swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
         ImageButton sendButton = findViewById(R.id.send_image_button);
         ImageButton cameraButton = findViewById(R.id.camera_image_button);
-        //TextView noMessageTextView = findViewById(R.id.no_message_text_view);
         selectedPreviewImageView = findViewById(R.id.selected_preview_image_view);
         ImageView cancelPreviewImageView = findViewById(R.id.cancel_preview_image_view);
         sendButton.setOnClickListener(this);
@@ -78,8 +71,8 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
 
         chatMessageList = new ArrayList<>();
         LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
-        chatRecyclerView.setHasFixedSize(true);
-        chatRecyclerView.setLayoutManager(linearLayoutManager);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(linearLayoutManager);
         linearLayoutManager.setReverseLayout(true);
         linearLayoutManager.setStackFromEnd(true);
 
@@ -95,15 +88,13 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
             sendProgressBar.setVisibility(View.GONE);
 
             if (createdResponse.equals("created")) {
-                messageEditText.setText("");
                 chatViewModel.checkLatestMessage(fromId, toId);
-                parseFile = null;
-                frameLayout.setVisibility(View.GONE);
             }
         });
 
         chatViewModel.getErrorResponse().observe(this, errorResponse -> {
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
             Toast.makeText(this, errorResponse, Toast.LENGTH_SHORT).show();
         });
 
@@ -113,35 +104,26 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
 
             if (chatMessages.size() > 0) {
                 skipLimit += limit;
-                swipeRefreshLayout.setRefreshing(false);
 
                 if (skipLimit <= limit) {
                     this.chatMessageList = chatMessages;
                     chatAdapter = new ChatAdapter(this, this.chatMessageList);
-                    chatRecyclerView.setAdapter(chatAdapter);
+                    recyclerView.setAdapter(chatAdapter);
                 } else {
                     int position = this.chatMessageList.size();
                     this.chatMessageList.addAll(chatMessages);
                     chatAdapter.notifyDataSetChanged();
-                    chatRecyclerView.smoothScrollToPosition(position);
+                    recyclerView.smoothScrollToPosition(position);
                 }
-            }/* else {
-                if (this.chatMessageList.size() <= 0) {
-                    String noMessage = "No messages found. Please send a message";
-                    noMessageTextView.setText(noMessage);
-                    swipeRefreshLayout.setRefreshing(false);
-                    noMessageTextView.setVisibility(View.VISIBLE);
-                } else {
-                    swipeRefreshLayout.setRefreshing(false);
-                }
-            }*/
+            }
         });
 
         chatViewModel.getCheckLatestMessage().observe(this, objectId -> {
+            String currentUserName = ParseUser.getCurrentUser().getUsername();
             if (objectId != null) {
-                chatViewModel.createOrUpdateLatestMessage(objectId, textMessage, fileName, fromId, toId);
+                chatViewModel.createOrUpdateLatestMessage(objectId, textMessage, currentUserName, fromId, toId);
             } else {
-                chatViewModel.createOrUpdateLatestMessage(null, textMessage, fileName, fromId, toId);
+                chatViewModel.createOrUpdateLatestMessage(null, textMessage, currentUserName, fromId, toId);
             }
         });
     }
@@ -151,9 +133,11 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
         switch (view.getId()) {
             case R.id.send_image_button:
                 textMessage = messageEditText.getText().toString();
-                if (!TextUtils.isEmpty(textMessage) || parseFile != null) {
-                    chatViewModel.createMessage(textMessage, parseFile, fromId, toId, fromId + toId);
+                if (inputStream != null || !TextUtils.isEmpty(textMessage)) {
+                    chatViewModel.createMessage(textMessage, inputStream, fromId, toId, fromId + toId);
                     sendProgressBar.setVisibility(View.VISIBLE);
+                    frameLayout.setVisibility(View.GONE);
+                    messageEditText.setText("");
                 }
                 break;
 
@@ -168,7 +152,9 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
                 break;
 
             case R.id.cancel_preview_image_view:
-                parseFile = null;
+                if (inputStream != null) {
+                    inputStream = null;
+                }
                 frameLayout.setVisibility(View.GONE);
                 break;
         }
@@ -185,16 +171,10 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
                 Uri uri = result.getUri();
 
                 try {
-                    InputStream iStream = getContentResolver().openInputStream(uri);
-                    if (iStream != null) {
-                        byte[] inputFileData = getBytes(iStream);
-
-                        if (inputFileData != null) {
-                            this.fileName = "image_" + System.currentTimeMillis();
-                            parseFile = new ParseFile(this.fileName, inputFileData);
-                            frameLayout.setVisibility(View.VISIBLE);
-                            Glide.with(this).load(uri).into(selectedPreviewImageView);
-                        }
+                    if (uri != null) {
+                        inputStream = getContentResolver().openInputStream(uri);
+                        Glide.with(this).load(uri).into(selectedPreviewImageView);
+                        frameLayout.setVisibility(View.VISIBLE);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -206,17 +186,17 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
         }
     }
 
-    public byte[] getBytes(InputStream inputStream) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-        int bufferSize = 1024;
-        byte[] buffer = new byte[bufferSize];
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
 
-        int len = 0;
-        while ((len = inputStream.read(buffer)) != -1) {
-            byteArrayOutputStream.write(buffer, 0, len);
+        try {
+            if (inputStream != null) {
+                inputStream.close();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-
-        return byteArrayOutputStream.toByteArray();
     }
 
     @Override

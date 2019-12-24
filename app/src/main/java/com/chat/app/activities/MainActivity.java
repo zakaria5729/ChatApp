@@ -16,6 +16,7 @@ import androidx.appcompat.widget.SearchView;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.chat.app.R;
 import com.chat.app.activities.auth.LoginActivity;
@@ -23,7 +24,11 @@ import com.chat.app.adapters.UserAdapter;
 import com.chat.app.viewmodels.UserViewModel;
 import com.parse.ParseUser;
 
-public class MainActivity extends BaseActivity {
+public class MainActivity extends BaseActivity implements SwipeRefreshLayout.OnRefreshListener {
+
+    private SwipeRefreshLayout swipeRefreshLayout;
+    private UserViewModel userViewModel;
+    private UserAdapter userAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,21 +37,24 @@ public class MainActivity extends BaseActivity {
 
         ProgressBar progressBar = findViewById(R.id.progressbar);
         TextView noUserFound = findViewById(R.id.no_user_text_view);
-        SearchView userSearchView = findViewById(R.id.user_search_view);
-        RecyclerView userRecyclerView = findViewById(R.id.user_recycler_view);
-        userRecyclerView.setHasFixedSize(true);
-        userRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        SearchView searchView = findViewById(R.id.user_search_view);
+        RecyclerView recyclerView = findViewById(R.id.user_recycler_view);
+        swipeRefreshLayout = findViewById(R.id.user_swipe_refresh_layout);
+        recyclerView.setHasFixedSize(true);
+        swipeRefreshLayout.setOnRefreshListener(this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        UserViewModel userViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
+        userViewModel = ViewModelProviders.of(this).get(UserViewModel.class);
         userViewModel.allUsers();
 
         userViewModel.getAllUsersResponse().observe(this, users -> {
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
 
             if (users.size() > 0) {
                 noUserFound.setVisibility(View.GONE);
-                UserAdapter userAdapter = new UserAdapter(this, users);
-                userRecyclerView.setAdapter(userAdapter);
+                userAdapter = new UserAdapter(this, users);
+                recyclerView.setAdapter(userAdapter);
             } else {
                 String noUser = "No users found";
                 noUserFound.setText(noUser);
@@ -55,11 +63,14 @@ public class MainActivity extends BaseActivity {
         });
 
         userViewModel.getErrorResponse().observe(this, errorResponse -> {
+            userAdapter = new UserAdapter();
+            recyclerView.setAdapter(userAdapter);
             progressBar.setVisibility(View.GONE);
+            swipeRefreshLayout.setRefreshing(false);
             Toast.makeText(this, errorResponse, Toast.LENGTH_SHORT).show();
         });
 
-        userSearchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 return false;
@@ -108,5 +119,11 @@ public class MainActivity extends BaseActivity {
         }
 
         return true;
+    }
+
+    @Override
+    public void onRefresh() {
+        swipeRefreshLayout.setRefreshing(true);
+        userViewModel.allUsers();
     }
 }

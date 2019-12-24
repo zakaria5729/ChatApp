@@ -1,6 +1,7 @@
 package com.chat.app.viewmodels;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -29,10 +30,11 @@ public class UserViewModel extends ViewModel {
             if (users != null && users.size() > 0) {
                 List<User> userList = new ArrayList<>();
                 String currentUserId = ParseUser.getCurrentUser().getObjectId();
+                String currentUserName = ParseUser.getCurrentUser().getUsername();
 
                 userService.lastMessage((objects, error1) -> {
                     if (objects != null) {
-                        String time = null, text = null, fileName = null;
+                        String time = null, text = null, fileFromWho = null;
 
                         for (ParseUser user : users) {
                             for (ParseObject object : objects) {
@@ -40,16 +42,25 @@ public class UserViewModel extends ViewModel {
                                 if (lastMessageId != null && !currentUserId.equals(user.getObjectId()) && (lastMessageId.equals(currentUserId + user.getObjectId()) || lastMessageId.equals(user.getObjectId() + currentUserId))) {
                                     time = object.getUpdatedAt().toString();
                                     text = object.getString("text");
-                                    fileName = object.getString("fileName");
+                                    fileFromWho = object.getString("fileFromWho");
+
+                                    if (!TextUtils.isEmpty(fileFromWho)) {
+                                        if (fileFromWho.equals(currentUserName)) {
+                                            fileFromWho = "You sent a photo";
+                                        } else {
+                                            fileFromWho =  fileFromWho.split(" ")[0] + " sent a photo";
+                                        }
+                                    }
                                     break;
                                 } else {
                                     time = null;
                                     text = null;
+                                    fileFromWho = null;
                                 }
                             }
 
                             if (!currentUserId.equals(user.getObjectId())) {
-                                userList.add(new User(user.getObjectId(), user.getUsername(), user.getEmail(), text, fileName, getDateTime(time)));
+                                userList.add(new User(user.getObjectId(), user.getUsername(), user.getEmail(), text, fileFromWho, getDateTime(time)));
                             }
                         }
                         usersResponse.setValue(userList);

@@ -1,17 +1,23 @@
 package com.chat.app.viewmodels;
 
+import android.app.Application;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.text.TextUtils;
 
+import androidx.annotation.NonNull;
+import androidx.lifecycle.AndroidViewModel;
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
-import androidx.lifecycle.ViewModel;
 
-import com.chat.app.adapters.ChatAdapter;
 import com.chat.app.models.ChatMessage;
 import com.chat.app.services.ChatService;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -19,7 +25,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 
-public class ChatViewModel extends ViewModel {
+public class ChatViewModel extends AndroidViewModel {
 
     private ChatService chatService = new ChatService();
     private MutableLiveData<String> errorResponse = new MutableLiveData<>();
@@ -27,18 +33,26 @@ public class ChatViewModel extends ViewModel {
     private MutableLiveData<List<ChatMessage>> readMessageResponse = new MutableLiveData<>();
     private MutableLiveData<String> checkLatestMessage = new MutableLiveData<>();
 
-    public void createMessage(String text, ParseFile parseFile, String fromId, String toId, String threadId) {
+    public ChatViewModel(@NonNull Application application) {
+        super(application);
+    }
+
+    public void createMessage(String text, InputStream inputStream, String fromId, String toId, String threadId) {
         if (TextUtils.isEmpty(fromId) || TextUtils.isEmpty(toId) || TextUtils.isEmpty(threadId)) {
             return;
         }
 
-        chatService.createMessage(text, parseFile, fromId, toId, threadId, (success, error) -> {
-            if (success != null) {
-                createdResponse.setValue(success);
-            } else if (error != null) {
-                errorResponse.setValue(error);
-            }
-        });
+        try {
+            chatService.createMessage(text, getParseFile(inputStream), fromId, toId, threadId, (success, error) -> {
+                if (success != null) {
+                    createdResponse.setValue(success);
+                } else if (error != null) {
+                    errorResponse.setValue(error);
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void checkLatestMessage(String fromId, String toId) {
@@ -56,8 +70,12 @@ public class ChatViewModel extends ViewModel {
         });
     }
 
-    public void createOrUpdateLatestMessage(String objectId, String text, String fileName, String fromId, String toId) {
-        chatService.createOrUpdateLatestMessage(objectId, text, fileName, fromId, toId, (success, error) -> {
+    public void createOrUpdateLatestMessage(String objectId, String text, String fileFromWho, String fromId, String toId) {
+        if (TextUtils.isEmpty(fromId) || TextUtils.isEmpty(toId)) {
+            return;
+        }
+
+        chatService.createOrUpdateLatestMessage(objectId, text, fileFromWho, fromId, toId, (success, error) -> {
             if (success != null) {
                 createdResponse.setValue(success);
             } else if (error != null) {
@@ -67,7 +85,6 @@ public class ChatViewModel extends ViewModel {
     }
 
     public void readMessages(String fromId, String toId, int limit, int skipLimit) {
-
         chatService.readMessages(fromId, toId, limit, skipLimit, (objects, error) -> {
             if (objects != null) {
                 List<ChatMessage> chatMessageList = new ArrayList<>();
@@ -129,6 +146,27 @@ public class ChatViewModel extends ViewModel {
         }
 
         return formattedTime;
+    }
+
+    private ParseFile getParseFile(InputStream inputStream) throws IOException {
+        ParseFile parseFile = null;
+
+        if (inputStream != null) {
+            ByteArrayOutputStream bytearrayoutputstream = new ByteArrayOutputStream();
+
+            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 50, bytearrayoutputstream);
+
+            byte[] bytes = bytearrayoutputstream.toByteArray();
+            if (bytes.length > 0) {
+                parseFile = new ParseFile("image_" + System.currentTimeMillis() + ".jpg", bytes);
+            }
+
+            inputStream.close();
+            bytearrayoutputstream.close();
+        }
+
+        return parseFile;
     }
 
     public LiveData<String> getCreatedResponse() {

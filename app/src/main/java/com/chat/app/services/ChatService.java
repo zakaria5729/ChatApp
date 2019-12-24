@@ -1,6 +1,7 @@
 package com.chat.app.services;
 
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.chat.app.interfaces.OnObjectResponse;
 import com.chat.app.interfaces.OnResponse;
@@ -31,25 +32,21 @@ public class ChatService {
         });
     }
 
-    public void createOrUpdateLatestMessage(String objectId, String text, String fileName, String fromId, String toId, OnResponse response) {
+    public void createOrUpdateLatestMessage(String objectId, String text, String fileFromWho, String fromId, String toId, OnResponse response) {
         if (objectId != null) {
             ParseQuery<ParseObject> query = ParseQuery.getQuery("LatestMessage");
             query.getInBackground(objectId, (object, e) -> {
                 if (e == null) {
-                    object.put("lastMessageId", fromId + toId);
-                    object.put("fromId", fromId);
-                    object.put("toId", toId);
-
-                    if (!TextUtils.isEmpty(text.trim()) && !TextUtils.isEmpty(fileName)) {
+                    if (!TextUtils.isEmpty(text.trim()) && !TextUtils.isEmpty(fileFromWho)) {
                         object.put("text", text);
-                        object.put("fileName", fileName);
+                        object.put("fileFromWho", fileFromWho);
                     } else {
                         if (!TextUtils.isEmpty(text.trim())) {
                             object.put("text", text);
-                            object.put("fileName", "");
-                        } else if (!TextUtils.isEmpty(fileName)) {
+                            object.put("fileFromWho", "");
+                        } else if (!TextUtils.isEmpty(fileFromWho)) {
                             object.put("text", "");
-                            object.put("fileName", fileName);
+                            object.put("fileFromWho", fileFromWho);
                         }
                     }
 
@@ -60,6 +57,8 @@ public class ChatService {
                             response.onComplete("updated", null);
                         }
                     });
+                } else {
+                    response.onComplete(null, e.getMessage());
                 }
             });
         } else {
@@ -68,14 +67,14 @@ public class ChatService {
             parseObject.put("fromId", fromId);
             parseObject.put("toId", toId);
 
-            if (!TextUtils.isEmpty(text.trim()) && !TextUtils.isEmpty(fileName)) {
+            if (!TextUtils.isEmpty(text.trim()) && !TextUtils.isEmpty(fileFromWho)) {
                 parseObject.put("text", text);
-                parseObject.put("fileName", fileName);
+                parseObject.put("fileFromWho", fileFromWho);
             } else {
                 if (!TextUtils.isEmpty(text.trim())) {
                     parseObject.put("text", text);
-                } else if (!TextUtils.isEmpty(fileName)) {
-                    parseObject.put("fileName", fileName);
+                } else if (!TextUtils.isEmpty(fileFromWho)) {
+                    parseObject.put("fileFromWho", fileFromWho);
                 }
             }
 

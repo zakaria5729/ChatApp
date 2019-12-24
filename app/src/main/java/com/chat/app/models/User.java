@@ -1,13 +1,13 @@
 package com.chat.app.models;
 
 public class User {
-    private String id, name, email, lastMessage, fileName, lastSeen;
+    private String id, name, email, lastMessage, fileFromWho, lastSeen;
 
-    public User(String id, String name, String email, String lastMessage, String fileName, String lastSeen) {
+    public User(String id, String name, String email, String lastMessage, String fileFromWho, String lastSeen) {
         this.id = id;
         this.name = name;
         this.email = email;
-        this.fileName = fileName;
+        this.fileFromWho = fileFromWho;
         this.lastMessage = lastMessage;
         this.lastSeen = lastSeen;
     }
@@ -24,8 +24,8 @@ public class User {
         return email;
     }
 
-    public String getFileName() {
-        return fileName;
+    public String getFileFromWho() {
+        return fileFromWho;
     }
 
     public String getLastMessage() {

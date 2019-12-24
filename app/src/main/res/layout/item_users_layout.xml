@@ -37,7 +37,7 @@
             android:maxLines="1"
             android:layout_gravity="center_vertical"
             android:textColor="@color/colorLighterDark"
-            android:textSize="17sp"
+            android:textSize="18sp"
             android:textStyle="bold"
             tools:text="Zakaria Hossain" />
 

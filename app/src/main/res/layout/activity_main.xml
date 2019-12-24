@@ -1,39 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".activities.MainActivity">
 
     <androidx.appcompat.widget.SearchView
         android:id="@+id/user_search_view"
         android:layout_width="match_parent"
         android:layout_height="42dp"
-        android:layout_margin="8dp"
-        app:goIcon="@mipmap/ic_launcher_round"
-        android:animateLayoutChanges="true"
-        android:focusableInTouchMode="true"
-        android:background="@drawable/custom_rounder_gray"
-        app:defaultQueryHint="Search Users"
-        app:iconifiedByDefault="false"
-        app:queryBackground="@android:color/transparent"
-        android:layout_alignParentTop="true"
         android:layout_alignParentStart="true"
-        android:layout_alignParentEnd="true"/>
+        android:layout_alignParentTop="true"
+        android:layout_alignParentEnd="true"
+        android:layout_margin="8dp"
+        android:animateLayoutChanges="true"
+        android:background="@drawable/custom_rounder_gray"
+        android:focusableInTouchMode="true"
+        app:defaultQueryHint="Search Users"
+        app:goIcon="@mipmap/ic_launcher_round"
+        app:iconifiedByDefault="false"
+        app:queryBackground="@android:color/transparent" />
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/user_recycler_view"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/user_swipe_refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginEnd="8dp"
-        android:layout_marginBottom="8dp"
         android:layout_below="@id/user_search_view"
-        android:layout_alignParentBottom="true"
         android:layout_alignParentStart="true"
         android:layout_alignParentEnd="true"
-        tools:itemCount="15"
-        tools:listitem="@layout/item_users_layout" />
+        android:layout_alignParentBottom="true"
+        android:layout_marginEnd="8dp"
+        android:layout_marginBottom="8dp">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/user_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:itemCount="15"
+            tools:listitem="@layout/item_users_layout" />
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <ProgressBar
         android:id="@+id/progressbar"
@@ -47,9 +53,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerInParent="true"
-        android:visibility="gone"
         android:layout_margin="16dp"
         android:textSize="18sp"
+        android:visibility="gone"
         tools:text="No users found"
         tools:visibility="visible" />
 
