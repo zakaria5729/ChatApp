@@ -4,6 +4,7 @@ import android.app.Application;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.text.TextUtils;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.lifecycle.AndroidViewModel;
@@ -15,7 +16,11 @@ import com.chat.app.services.ChatService;
 import com.parse.ParseFile;
 import com.parse.ParseObject;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.text.SimpleDateFormat;
@@ -159,10 +164,11 @@ public class ChatViewModel extends AndroidViewModel {
 
             byte[] bytes = bytearrayoutputstream.toByteArray();
             if (bytes.length > 0) {
-                parseFile = new ParseFile("image_" + System.currentTimeMillis() + ".jpg", bytes);
+                parseFile = new ParseFile("IMG_" + System.currentTimeMillis() + ".jpg", bytes);
             }
 
             inputStream.close();
+            bytearrayoutputstream.flush();
             bytearrayoutputstream.close();
         }
 

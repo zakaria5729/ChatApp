@@ -1,6 +1,7 @@
 package com.chat.app.adapters;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.text.TextUtils;
 import android.util.Log;
@@ -26,6 +27,7 @@ import com.bumptech.glide.request.RequestListener;
 import com.bumptech.glide.request.RequestOptions;
 import com.bumptech.glide.request.target.Target;
 import com.chat.app.R;
+import com.chat.app.activities.PreviewActivity;
 import com.chat.app.models.ChatMessage;
 import com.parse.ParseUser;
 
@@ -99,6 +101,15 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
                         .into(holder.fromImageView);
             }
 
+            holder.fromImageView.setOnClickListener(v -> {
+                if (fromChatMessage.getImageUrl() != null && !TextUtils.isEmpty(fromChatMessage.getImageUrl())) {
+                    Intent intent = new Intent(context, PreviewActivity.class);
+                    intent.putExtra("image_url", fromChatMessage.getImageUrl());
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    context.startActivity(intent);
+                }
+            });
+
         } else {
             ChatMessage toChatMessage = chatMessageList.get(position);
             holder.toRelativeLayout.setVisibility(View.VISIBLE);
@@ -138,6 +149,15 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
                         .error(R.color.colorLighterGray)
                         .into(holder.toImageView);
             }
+
+            holder.fromImageView.setOnClickListener(v -> {
+                if (toChatMessage.getImageUrl() != null && !TextUtils.isEmpty(toChatMessage.getImageUrl())) {
+                    Intent intent = new Intent(context, PreviewActivity.class);
+                    intent.putExtra("image_url", toChatMessage.getImageUrl());
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NO_ANIMATION);
+                    context.startActivity(intent);
+                }
+            });
         }
     }
 

@@ -1,9 +1,14 @@
 package com.chat.app.activities;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -12,7 +17,10 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.core.content.FileProvider;
 import androidx.lifecycle.ViewModelProviders;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
@@ -24,15 +32,19 @@ import com.chat.app.adapters.ChatAdapter;
 import com.chat.app.models.ChatMessage;
 import com.chat.app.viewmodels.ChatViewModel;
 import com.parse.ParseUser;
-import com.theartofdev.edmodo.cropper.CropImage;
-import com.theartofdev.edmodo.cropper.CropImageView;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ChatActivity extends BaseActivity implements View.OnClickListener, SwipeRefreshLayout.OnRefreshListener {
+
+    private final int CAMERA_REQUEST_CODE = 111;
+    private final int GALLERY_REQUEST_CODE = 222;
 
     private ChatViewModel chatViewModel;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -47,6 +59,7 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
     private ImageView selectedPreviewImageView;
     private ProgressBar sendProgressBar;
     private InputStream inputStream;
+    private File tempImageFile;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -142,21 +155,73 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
                 break;
 
             case R.id.camera_image_button:
-                CropImage.activity()
-                        .setGuidelines(CropImageView.Guidelines.ON)
-                        .setActivityTitle("Select the area which you want to crop")
-                        .setCropShape(CropImageView.CropShape.RECTANGLE)
-                        .setCropMenuCropButtonTitle("Done")
-                        .setCropMenuCropButtonIcon(R.drawable.ic_camera)
-                        .start(this);
+                String[] items = {"Camera", "Gallery"};
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setTitle("Choose an action");
+                builder.setItems(items, (dialog, i) -> {
+                    int permissionStatus;
+                    if (items[i].equals("Camera")) {
+                        permissionStatus = checkUserPermission(Manifest.permission.CAMERA, CAMERA_REQUEST_CODE);
+                        if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
+                            capturedImage();
+                        }
+                    } else if (items[i].equals("Gallery")) {
+                        permissionStatus = checkUserPermission(Manifest.permission.READ_EXTERNAL_STORAGE, GALLERY_REQUEST_CODE);
+                        if (permissionStatus == PackageManager.PERMISSION_GRANTED) {
+                            pickImageFromGallery();
+                        }
+                    }
+                });
+                builder.create().show();
                 break;
 
             case R.id.cancel_preview_image_view:
+                frameLayout.setVisibility(View.GONE);
                 if (inputStream != null) {
                     inputStream = null;
                 }
-                frameLayout.setVisibility(View.GONE);
+                if (tempImageFile != null) {
+                    tempImageFile = null;
+                }
                 break;
+        }
+    }
+
+    private void pickImageFromGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(Intent.createChooser(intent, "choose an image"), GALLERY_REQUEST_CODE);
+    }
+
+    private void capturedImage() {
+        File storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+
+        try {
+            tempImageFile = File.createTempFile("IMG_" + System.currentTimeMillis(), ".jpg", storageDir);
+            Uri photoURI = FileProvider.getUriForFile(this, "com.chat.app.fileprovider", this.tempImageFile);
+
+            if (photoURI != null) {
+                Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                if (intent.resolveActivity(getPackageManager()) != null) {
+                    intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                    startActivityForResult(intent, CAMERA_REQUEST_CODE);
+                }
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == CAMERA_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                capturedImage();
+            }
+        } else if (requestCode == GALLERY_REQUEST_CODE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                pickImageFromGallery();
+            }
         }
     }
 
@@ -164,24 +229,31 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
-        if (requestCode == CropImage.CROP_IMAGE_ACTIVITY_REQUEST_CODE) {
-            CropImage.ActivityResult result = CropImage.getActivityResult(data);
-
-            if (resultCode == RESULT_OK && result != null) {
-                Uri uri = result.getUri();
-
+        if (resultCode == RESULT_OK) {
+            if (requestCode == CAMERA_REQUEST_CODE) {
                 try {
-                    if (uri != null) {
-                        inputStream = getContentResolver().openInputStream(uri);
-                        Glide.with(this).load(uri).into(selectedPreviewImageView);
+                    Uri imageUri = Uri.fromFile(tempImageFile);
+                    if (imageUri != null) {
+                        inputStream = getContentResolver().openInputStream(imageUri);
+                        Glide.with(this).load(imageUri).into(selectedPreviewImageView);
                         frameLayout.setVisibility(View.VISIBLE);
                     }
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            } else if (resultCode == CropImage.CROP_IMAGE_ACTIVITY_RESULT_ERROR_CODE && result != null) {
-                Exception exception = result.getError();
-                exception.printStackTrace();
+            } else if (requestCode == GALLERY_REQUEST_CODE) {
+                if (data != null) {
+                    Uri imageUri = data.getData();
+                    try {
+                        if (imageUri != null) {
+                            inputStream = getContentResolver().openInputStream(imageUri);
+                            Glide.with(this).load(imageUri).into(selectedPreviewImageView);
+                            frameLayout.setVisibility(View.VISIBLE);
+                        }
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }
@@ -194,6 +266,10 @@ public class ChatActivity extends BaseActivity implements View.OnClickListener, 
             if (inputStream != null) {
                 inputStream.close();
             }
+            if (tempImageFile != null) {
+                tempImageFile = null;
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         }

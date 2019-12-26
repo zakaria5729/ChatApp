@@ -8,7 +8,6 @@ import androidx.lifecycle.ViewModel;
 
 import com.chat.app.activities.BaseActivity;
 import com.chat.app.services.AuthService;
-import com.parse.ParseObject;
 import com.parse.ParseUser;
 
 public class AuthViewModel extends ViewModel {
@@ -18,12 +17,12 @@ public class AuthViewModel extends ViewModel {
     private MutableLiveData<String> errorResponse = new MutableLiveData<>();
 
     public void signUpUser(String name, String email, String password) {
-        if (TextUtils.isEmpty(name) && (TextUtils.isEmpty(email) || !BaseActivity.isValidEmail(email)) || (password.length() < 6 && TextUtils.isEmpty(password))) {
+        if (TextUtils.isEmpty(name) && (TextUtils.isEmpty(email) || BaseActivity.isValidEmail(email)) || (password.length() < 6 && TextUtils.isEmpty(password))) {
             return;
         } else {
             if (TextUtils.isEmpty(name)) {
                 return;
-            } else if (TextUtils.isEmpty(email) || !BaseActivity.isValidEmail(email)) {
+            } else if (TextUtils.isEmpty(email) || BaseActivity.isValidEmail(email)) {
                 return;
             } else if (password.length() < 6 || TextUtils.isEmpty(password)) {
                 return;
@@ -40,10 +39,10 @@ public class AuthViewModel extends ViewModel {
     }
 
     public void loginUser(String email, String password) {
-        if ((TextUtils.isEmpty(email) || !BaseActivity.isValidEmail(email)) || (password.length() < 6 && TextUtils.isEmpty(password))) {
+        if ((TextUtils.isEmpty(email) || BaseActivity.isValidEmail(email)) || (password.length() < 6 && TextUtils.isEmpty(password))) {
             return;
         } else {
-            if (TextUtils.isEmpty(email) || !BaseActivity.isValidEmail(email)) {
+            if (TextUtils.isEmpty(email) || BaseActivity.isValidEmail(email)) {
                 return;
             } else if (password.length() < 6 || TextUtils.isEmpty(password)) {
                 return;

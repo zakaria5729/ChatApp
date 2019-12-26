@@ -1,7 +1,6 @@
 package com.chat.app.viewmodels;
 
 import android.text.TextUtils;
-import android.util.Log;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
@@ -110,7 +109,7 @@ public class UserViewModel extends ViewModel {
     }
 
     public void searchedUser(String searchedKey) {
-        if (TextUtils.isEmpty(searchedKey) || !BaseActivity.isValidEmail(searchedKey)) {
+        if (TextUtils.isEmpty(searchedKey) || BaseActivity.isValidEmail(searchedKey)) {
             return;
         }
 
